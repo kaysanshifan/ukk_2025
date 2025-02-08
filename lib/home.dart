@@ -1,16 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:pl2_kasir/stok_barang.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'transaksi.dart';
 import 'keranjang.dart'; // Import halaman Keranjang
-
-class Barang {
-  String nama;
-  double harga;
-  int id;
-
-  Barang({required this.nama, required this.harga, required this.id});
-}
+import 'barang.dart'; // Import kelas Barang
+import 'stok_barang.dart'; // Import kelas StokBarang
 
 class HomePage extends StatefulWidget {
   final String username;
@@ -18,7 +11,7 @@ class HomePage extends StatefulWidget {
   HomePage({required this.username});
 
   @override
-  
+  _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
@@ -41,7 +34,7 @@ class _HomePageState extends State<HomePage> {
         }).toList();
       });
     } catch (error) {
-      print("Error fetching barang: \$error");
+      print("Error fetching barang: $error");
     }
   }
 
@@ -81,8 +74,7 @@ class _HomePageState extends State<HomePage> {
               child: buildBarangList(),
             )
           : _selectedIndex == 1
-              ? StokBarang(
-                  onDataChanged: updateBarangList) // Pass callback here
+              ? StokBarang(onDataChanged: updateBarangList) // Panggil callback di sini
               : _selectedIndex == 2
                   ? TransaksiBaruPage(keranjang: keranjang)
                   : Container(),
@@ -95,14 +87,13 @@ class _HomePageState extends State<HomePage> {
         },
         items: [
           BottomNavigationBarItem(
-              icon: Icon(Icons.app_shortcut), label: "menu product"),
+              icon: Icon(Icons.app_shortcut), label: "Menu Produk"),
           BottomNavigationBarItem(
-              icon: Icon(Icons.library_books_rounded), label: "list product"),
+              icon: Icon(Icons.library_books_rounded), label: "List Produk"),
           BottomNavigationBarItem(
               icon: Icon(Icons.receipt_long), label: "Transaksi"),
         ],
       ),
-
       // Floating Action Button for Keranjang
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(
