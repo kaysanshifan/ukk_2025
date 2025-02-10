@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'barang.dart'; // Import kelas Barang
+import 'transaksi.dart'; 
+import 'barang.dart';
 
 class KeranjangPage extends StatefulWidget {
   final List<Barang> keranjang;
@@ -59,7 +60,12 @@ class _KeranjangPageState extends State<KeranjangPage> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          // Implementasi checkout
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TransaksiBaruPage(keranjang: widget.keranjang),
+            ),
+          );
         },
         label: Text('Checkout'),
         icon: Icon(Icons.shopping_cart_checkout),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'barang.dart'; // Import kelas Barang
+import 'barang.dart';
 
 class TransaksiBaruPage extends StatelessWidget {
   final List<Barang> keranjang;

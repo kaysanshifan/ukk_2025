@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'home.dart';
 
@@ -13,40 +14,55 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
 
-  Future<void> _login() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
+  Future<void> _handleLogin() async {
+    setState(() {
+      _isLoading = true;
+    });
 
-      try {
-        // Ambil data pengguna dari tabel user
-        final response = await Supabase.instance.client
-            .from('user')
-            .select()
-            .eq('email', _emailController.text)
-            .single();
+    try {
+      final String username = _emailController.text.trim();
+      final String password = _passwordController.text.trim();
 
+      if (username.isEmpty || password.isEmpty) {
+        throw 'Silakan isi username dan password';
+      }
+
+      final Map<String, dynamic>? response = await Supabase.instance.client
+          .from('user')
+          .select()
+          .eq('username', username)
+          .eq('password', password)
+          .maybeSingle();
+
+      if (response != null) {
+        if (!mounted) return;
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('username', username);
+        await prefs.setBool('is_logged_in', true);
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomePage(username: username), // Tambahkan username
+          ),
+        );
+      } else {
+        throw 'Username atau password salah';
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
         setState(() {
           _isLoading = false;
         });
-
-        final data = response.data as Map<String, dynamic>; // Pastikan data adalah map
-        if (data['password'] == _passwordController.text) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => HomePage(username: _emailController.text)),
-          );
-        } else {
-          _showAlertDialog('Login Gagal', 'Password salah');
-        }
-      } catch (error) {
-        setState(() {
-          _isLoading = false;
-        });
-
-        // Tangani kasus pengguna tidak ditemukan atau kesalahan lain
-        _showAlertDialog('Login Gagal', 'Pengguna tidak ditemukan atau terjadi kesalahan.');
       }
     }
   }
@@ -225,7 +241,7 @@ class _LoginPageState extends State<LoginPage> {
                   Padding(
                     padding: EdgeInsets.fromLTRB(0, 30, 0, 16),
                     child: MaterialButton(
-                      onPressed: _login,
+                      onPressed: _handleLogin,
                       color: Color(0xff20bffc),
                       elevation: 0,
                       shape: RoundedRectangleBorder(
