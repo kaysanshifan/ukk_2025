@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'transaksi.dart';
 import 'barang.dart';
+import 'riwayat.dart'; // Update with your actual import path
+
 
 class KeranjangPage extends StatelessWidget {
   final List<Barang> keranjang;
@@ -12,7 +13,7 @@ class KeranjangPage extends StatelessWidget {
     double totalHarga = keranjang.fold(0, (sum, item) => sum + item.harga * item.jumlah);
 
     return Scaffold(
-      appBar: AppBar(title: Text('Keranjang')),
+      appBar: AppBar(title: Text('Transaksi')),
       body: Column(
         children: [
           Expanded(
@@ -37,16 +38,17 @@ class KeranjangPage extends StatelessWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => TransaksiBaruPage(keranjang: keranjang)),
-          );
-        },
-        label: Text('Lanjut ke Pembayaran'),
-        icon: Icon(Icons.payment),
-      ),
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => RiwayatPage()), // Ensure RiwayatPage() is defined and imported
     );
+  },
+  label: Text("Bayar"),
+  icon: Icon(Icons.credit_card),
+),
+    );
+
   }
 }
 

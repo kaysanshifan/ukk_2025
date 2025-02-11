@@ -21,8 +21,29 @@ class _PelangganPageState extends State<PelangganPage> {
     });
   }
 
+Future<bool> isPelangganExists(String nama) async {
+  final response = await Supabase.instance.client
+      .from('pelanggan')
+      .select()
+      .eq('nama', nama)
+      .maybeSingle();
+  return response != null;
+}
+
+
   Future<void> addPelanggan() async {
     if (_namaController.text.isEmpty || _alamatController.text.isEmpty) return;
+
+    bool exists = await isPelangganExists(_namaController.text);
+    if (exists) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Pelanggan dengan nama yang sama sudah ada!'),
+        ),
+      );
+      return;
+    }
+
     await Supabase.instance.client.from('pelanggan').insert({
       'nama': _namaController.text,
       'alamat': _alamatController.text,

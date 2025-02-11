@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class StokBarang extends StatefulWidget {
-  final Function onDataChanged; // Callback function
+  final Function onDataChanged;
 
   const StokBarang({Key? key, required this.onDataChanged}) : super(key: key);
 
@@ -16,7 +16,6 @@ class _StokBarangState extends State<StokBarang> {
   final TextEditingController _namaController = TextEditingController();
   final TextEditingController _hargaController = TextEditingController();
   final TextEditingController _stokController = TextEditingController();
-  final TextEditingController _searchController = TextEditingController();
 
   Future<void> fetchBarang() async {
     final response = await Supabase.instance.client.from('products').select();
@@ -26,8 +25,28 @@ class _StokBarangState extends State<StokBarang> {
     });
   }
 
+  Future<bool> isBarangExists(String nama) async {
+  final response = await Supabase.instance.client
+      .from('products')
+      .select()
+      .eq('nama', nama)
+      .maybeSingle();
+  return response != null;
+}
+
   Future<void> addBarang() async {
     if (_namaController.text.isEmpty || _hargaController.text.isEmpty || _stokController.text.isEmpty) return;
+
+    bool exists = await isBarangExists(_namaController.text);
+    if (exists) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Barang dengan nama yang sama sudah ada!'),
+        ),
+      );
+      return;
+    }
+
     await Supabase.instance.client.from('products').insert({
       'nama': _namaController.text,
       'harga': double.parse(_hargaController.text),
@@ -169,13 +188,11 @@ class _StokBarangState extends State<StokBarang> {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
-              controller: _searchController,
               onChanged: _filterBarang,
               decoration: InputDecoration(
                 hintText: 'Cari barang...',
-                prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.0),
+                  borderRadius: BorderRadius.circular(40.0),
                   borderSide: BorderSide(color: Colors.grey),
                 ),
                 filled: true,
@@ -230,7 +247,7 @@ class _StokBarangState extends State<StokBarang> {
                       ),
                     ],
                   ),
-                );
+                );  
               },
             ),
           ),

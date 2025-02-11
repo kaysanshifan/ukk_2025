@@ -3,7 +3,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'home.dart';
 
-
 class LoginPage extends StatefulWidget {
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -38,14 +37,16 @@ class _LoginPageState extends State<LoginPage> {
       if (response != null) {
         if (!mounted) return;
 
+        final String role = response['role']; // Ambil role pengguna
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('username', username);
+        await prefs.setString('role', role);
         await prefs.setBool('is_logged_in', true);
 
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => HomePage(username: username), // Tambahkan username
+            builder: (context) => HomePage(username: username, role: role),
           ),
         );
       } else {
@@ -153,7 +154,7 @@ class _LoginPageState extends State<LoginPage> {
                             width: 1,
                           ),
                         ),
-                        labelText: "email",
+                        labelText: "username",
                         labelStyle: TextStyle(
                           fontWeight: FontWeight.w400,
                           fontStyle: FontStyle.normal,
