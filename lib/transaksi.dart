@@ -8,7 +8,7 @@ class TransaksiBaruPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double totalHarga = keranjang.fold(0, (sum, item) => sum + item.harga);
+    double totalHarga = keranjang.fold(0, (sum, item) => sum + item.harga * item.jumlah);
 
     return Scaffold(
       appBar: AppBar(
@@ -25,7 +25,7 @@ class TransaksiBaruPage extends StatelessWidget {
                   margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   child: ListTile(
                     title: Text(barang.nama),
-                    subtitle: Text("Rp ${barang.harga.toStringAsFixed(2)}"),
+                    subtitle: Text("Jumlah: ${barang.jumlah} - Harga: Rp ${(barang.harga * barang.jumlah).toStringAsFixed(2)}"),
                   ),
                 );
               },
