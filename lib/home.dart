@@ -73,8 +73,6 @@ class _HomePageState extends State<HomePage> {
         ));
       }
     });
-    // Di sini Anda dapat menangani hubungan antara pelanggan dan item keranjang.
-    // Misalnya, simpan informasi transaksi ke Supabase
   }
 
   void updateBarangList() {
@@ -85,7 +83,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     fetchBarang();
-    fetchPelanggan(); // Fetch pelanggan data
+    fetchPelanggan();
   }
 
   @override
@@ -157,7 +155,7 @@ class _HomePageState extends State<HomePage> {
                   label: "List barang",
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.people),
+                  icon: Icon(Icons.person_add),
                   label: "Daftar Pelanggan",
                 ),
                 BottomNavigationBarItem(
@@ -167,10 +165,6 @@ class _HomePageState extends State<HomePage> {
                 BottomNavigationBarItem(
                   icon: Icon(Icons.history),
                   label: "Riwayat",
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.person_add),
-                  label: "Buat akun",
                 ),
               ],
       ),
@@ -227,58 +221,71 @@ class _HomePageState extends State<HomePage> {
                       TextEditingController _jumlahController =
                           TextEditingController();
                       return AlertDialog(
-                        title: Text("Tambahkan ke Keranjang"),
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text("Stok tersedia: ${barang.stok}"),
-                            TextField(
-                              controller: _jumlahController,
-                              decoration:
-                                  InputDecoration(labelText: "Jumlah"),
-                              keyboardType: TextInputType.number,
-                            ),
-                            DropdownButton<String>(
-                              value: selectedPelanggan,
-                              hint: Text("Pilih Pelanggan"),
-                              onChanged: (String? newValue) {
-                                setState(() {
-                                  selectedPelanggan = newValue;
-                                });
-                              },
-                              items: pelangganList.map((pelanggan) {
-                                return DropdownMenuItem<String>(
-                                  value: pelanggan['id'].toString(),
-                                  child: Text(pelanggan['nama']),
-                                );
-                              }).toList(),
-                            ),
-                          ],
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: Text("Batal"),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              int jumlah =
-                                  int.parse(_jumlahController.text);
-                              if (jumlah > 0 && jumlah <= barang.stok && selectedPelanggan != null) {
-                                addToKeranjang(barang, jumlah, selectedPelanggan!);
-                                Navigator.pop(context);
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text("Jumlah tidak valid atau pelanggan belum dipilih"),
-                                  ),
-                                );
-                              }
-                            },
-                            child: Text("Tambah"),
+                      title: Text("Tambahkan ke Keranjang"),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text("Stok tersedia: ${barang.stok}"),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.remove),
+                                onPressed: () {
+                                  setState(() {
+                                    int currentJumlah = int.parse(_jumlahController.text);
+                                    if (currentJumlah > 1) {
+                                      _jumlahController.text = (currentJumlah - 1).toString();
+                                    }
+                                  });
+                                },
+                              ),
+                              Expanded(
+                                child: TextField(
+                                  controller: _jumlahController,
+                                  decoration: InputDecoration(labelText: "Jumlah"),
+                                  keyboardType: TextInputType.number,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.add),
+                                onPressed: () {
+                                  setState(() {
+                                    int currentJumlah = int.parse(_jumlahController.text);
+                                    if (currentJumlah < barang.stok) {
+                                      _jumlahController.text = (currentJumlah + 1).toString();
+                                    }
+                                  });
+                                },
+                              ),
+                            ],
                           ),
                         ],
-                      );
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: Text("Batal"),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            int jumlah = int.parse(_jumlahController.text);
+                            if (jumlah > 0 && jumlah <= barang.stok) {
+                              addToKeranjang(barang, jumlah, ""); // Pass empty string or handle accordingly if pelangganId is required
+                              Navigator.pop(context);
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text("Jumlah tidak valid"),
+                                ),
+                              );
+                            }
+                          },
+                          child: Text("Tambah"),
+                        ),
+                      ],
+                    );
                     },
                   );
                 },

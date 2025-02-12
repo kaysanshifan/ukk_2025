@@ -7,65 +7,75 @@ class PelangganPage extends StatefulWidget {
 }
 
 class _PelangganPageState extends State<PelangganPage> {
-  List<dynamic> pelangganList = [];
-  final TextEditingController _namaController = TextEditingController();
+  List<dynamic> userList = [];
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _alamatController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
   List<dynamic> filteredList = [];
 
-  Future<void> fetchPelanggan() async {
-    final response = await Supabase.instance.client.from('pelanggan').select();
+  Future<void> fetchUsers() async {
+    final response = await Supabase.instance.client
+        .from('user')
+        .select('id, username, alamat')
+        .eq('role', 'pelanggan');
+
     setState(() {
-      pelangganList = response;
-      filteredList = pelangganList;
+      userList = response.map((user) {
+        return {
+          'id': user['id'] ?? 0,
+          'username': user['username'] ?? '',
+          'alamat': user['alamat'] ?? '',
+        };
+      }).toList();
+      filteredList = userList;
     });
   }
 
-Future<bool> isPelangganExists(String nama) async {
-  final response = await Supabase.instance.client
-      .from('pelanggan')
-      .select()
-      .eq('nama', nama)
-      .maybeSingle();
-  return response != null;
-}
+  Future<bool> isUserExists(String username) async {
+    final response = await Supabase.instance.client
+        .from('user')
+        .select()
+        .eq('username', username)
+        .maybeSingle();
+    return response != null;
+  }
 
-
-  Future<void> addPelanggan() async {
-    if (_namaController.text.isEmpty || _alamatController.text.isEmpty) return;
-
-    bool exists = await isPelangganExists(_namaController.text);
+  Future<void> addUser() async {
+    if (_usernameController.text.isEmpty || _alamatController.text.isEmpty) return;
+  
+    bool exists = await isUserExists(_usernameController.text);
     if (exists) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Pelanggan dengan nama yang sama sudah ada!'),
+          content: Text('Pengguna dengan username yang sama sudah ada!'),
         ),
       );
       return;
     }
 
-    await Supabase.instance.client.from('pelanggan').insert({
-      'nama': _namaController.text,
+    await Supabase.instance.client.from('user').insert({
+      'username': _usernameController.text,
       'alamat': _alamatController.text,
+      'role': 'pelanggan',
     });
-    _namaController.clear();
+    _usernameController.clear();
     _alamatController.clear();
-    fetchPelanggan();
+    fetchUsers();
   }
 
-  Future<void> editPelanggan(int id, String nama, String alamat) async {
-    _namaController.text = nama;
+  Future<void> editUser(int id, String username, String alamat) async {
+    _usernameController.text = username;
     _alamatController.text = alamat;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Edit Pelanggan"),
+        title: Text("Edit Pengguna"),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
-              controller: _namaController,
-              decoration: InputDecoration(labelText: "Nama"),
+              controller: _usernameController,
+              decoration: InputDecoration(labelText: "Username"),
             ),
             TextField(
               controller: _alamatController,
@@ -80,11 +90,11 @@ Future<bool> isPelangganExists(String nama) async {
           ),
           TextButton(
             onPressed: () async {
-              await Supabase.instance.client.from('pelanggan').update({
-                'nama': _namaController.text,
+              await Supabase.instance.client.from('user').update({
+                'username': _usernameController.text,
                 'alamat': _alamatController.text,
               }).eq('id', id);
-              fetchPelanggan();
+              fetchUsers();
               Navigator.pop(context);
             },
             child: Text("Simpan"),
@@ -94,16 +104,16 @@ Future<bool> isPelangganExists(String nama) async {
     );
   }
 
-  Future<void> deletePelanggan(int id) async {
-    await Supabase.instance.client.from('pelanggan').delete().eq('id', id);
-    fetchPelanggan();
+  Future<void> deleteUser(int id) async {
+    await Supabase.instance.client.from('user').delete().eq('id', id);
+    fetchUsers();
   }
 
-  void _filterPelanggan(String query) {
+  void _filterUsers(String query) {
     setState(() {
-      filteredList = pelangganList
-          .where((pelanggan) =>
-              pelanggan['nama'].toLowerCase().contains(query.toLowerCase()))
+      filteredList = userList
+          .where((user) =>
+              user['username'].toLowerCase().contains(query.toLowerCase()))
           .toList();
     });
   }
@@ -111,30 +121,30 @@ Future<bool> isPelangganExists(String nama) async {
   @override
   void initState() {
     super.initState();
-    fetchPelanggan();
+    fetchUsers();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Daftar Pelanggan'),
+        title: Text('Daftar Pengguna'),
         actions: [
           IconButton(
             icon: Icon(Icons.add),
             onPressed: () {
-              _namaController.clear();
+              _usernameController.clear();
               _alamatController.clear();
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: Text("Tambah Pelanggan"),
+                  title: Text("Tambah Pengguna"),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       TextField(
-                        controller: _namaController,
-                        decoration: InputDecoration(labelText: "Nama"),
+                        controller: _usernameController,
+                        decoration: InputDecoration(labelText: "Username"),
                       ),
                       TextField(
                         controller: _alamatController,
@@ -149,7 +159,7 @@ Future<bool> isPelangganExists(String nama) async {
                     ),
                     TextButton(
                       onPressed: () async {
-                        await addPelanggan();
+                        await addUser();
                         Navigator.pop(context);
                       },
                       child: Text("Simpan"),
@@ -167,9 +177,9 @@ Future<bool> isPelangganExists(String nama) async {
             padding: const EdgeInsets.all(8.0),
             child: TextField(
               controller: _searchController,
-              onChanged: _filterPelanggan,
+              onChanged: _filterUsers,
               decoration: InputDecoration(
-                hintText: 'Cari pelanggan...',
+                hintText: 'Cari pengguna...',
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.0),
@@ -184,26 +194,25 @@ Future<bool> isPelangganExists(String nama) async {
             child: ListView.builder(
               itemCount: filteredList.length,
               itemBuilder: (context, index) {
-                final pelanggan = filteredList[index];
+                final user = filteredList[index];
                 return ListTile(
-                  title: Text(pelanggan['nama']),
-                  subtitle: Text(pelanggan['alamat']),
+                  title: Text(user['username']),
+                  subtitle: Text(user['alamat']),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
                         icon: Icon(Icons.edit),
-                        onPressed: () =>
-                            editPelanggan(pelanggan['id'], pelanggan['nama'],
-                                pelanggan['alamat']),
+                        onPressed: () => editUser(user['id'], user['username'],
+                            user['alamat']),
                       ),
                       IconButton(
                         icon: Icon(Icons.delete),
                         onPressed: () => showDialog(
                           context: context,
                           builder: (context) => AlertDialog(
-                            title: Text("Hapus Pelanggan"),
-                            content: Text("Apakah Anda yakin ingin menghapus pelanggan ini?"),
+                            title: Text("Hapus Pengguna"),
+                            content: Text("Apakah Anda yakin ingin menghapus pengguna ini?"),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(context),
@@ -211,7 +220,7 @@ Future<bool> isPelangganExists(String nama) async {
                               ),
                               TextButton(
                                 onPressed: () {
-                                  deletePelanggan(pelanggan['id']);
+                                  deleteUser(user['id']);
                                   Navigator.pop(context);
                                 },
                                 child: Text("Hapus"),
